@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Homework Tracker</title>
+<style>
+  :root {
+    --bg: #f5f3ee; --card: #ffffff; --ink: #1d2327; --muted: #6b7276; --line: #e5e1d8;
+    --ok: #1f7a4d; --ok-bg: #e4f3ea; --warn: #9a5b00; --warn-bg: #fdf0d9;
+    --bad: #b3261e; --bad-bg: #fbe5e3; --none: #6b7276; --none-bg: #eeece6;
+    --accent: #23415c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15181b; --card: #1f2327; --ink: #eceae5; --muted: #a2a8ac; --line: #30353a;
+      --ok: #6fcf9b; --ok-bg: #173527; --warn: #f0b85a; --warn-bg: #3a2c12;
+      --bad: #f28b82; --bad-bg: #3d1d1b; --none: #a2a8ac; --none-bg: #2a2e32; --accent: #9cc0e0;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 16px 16px 48px; }
+  header { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin: 4px 0 14px; }
+  h1 { font-size: 24px; margin: 0; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); font-size: 14px; }
+  button { font: inherit; cursor: pointer; border-radius: 10px; border: 1px solid var(--line);
+    background: var(--card); color: var(--ink); padding: 8px 12px; }
+  button.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  button.small { font-size: 13px; padding: 5px 9px; border-radius: 8px; white-space: nowrap; flex-shrink: 0; }
+  button:disabled { opacity: .5; cursor: default; }
+
+  .target { background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    margin-bottom: 14px; }
+  .target { flex-wrap: wrap; }
+  .target .lbl { font-size: 14px; color: var(--muted); }
+  .target .qa { flex-basis: 100%; display: flex; gap: 8px; align-items: flex-start; font-size: 14px;
+    padding-top: 10px; border-top: 1px solid var(--line); }
+  .target .val { font-weight: 600; }
+  .stepper { display: flex; align-items: center; gap: 6px; }
+  .stepper button { width: 38px; height: 38px; padding: 0; font-size: 20px; line-height: 1; }
+  .stepper .n { min-width: 34px; text-align: center; font-size: 22px; font-weight: 700; }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+    margin-bottom: 14px; overflow: hidden; }
+  .kidhead { padding: 14px 16px 12px; display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+  .kidname { font-size: 20px; font-weight: 700; }
+  .grade { color: var(--muted); font-size: 13px; }
+  .big { text-align: right; }
+  .big .num { font-size: 26px; font-weight: 800; line-height: 1; }
+  .big .unit { font-size: 12px; color: var(--muted); }
+  .pill { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px;
+    text-transform: uppercase; letter-spacing: .03em; margin-top: 6px; }
+  .s-ok { color: var(--ok); } .bg-ok { background: var(--ok-bg); color: var(--ok); }
+  .s-behind { color: var(--warn); } .bg-behind { background: var(--warn-bg); color: var(--warn); }
+  .s-late { color: var(--bad); } .bg-late { background: var(--bad-bg); color: var(--bad); }
+  .s-nodata { color: var(--none); } .bg-nodata { background: var(--none-bg); color: var(--none); }
+  .note { font-size: 13px; color: var(--muted); padding: 0 16px 12px; }
+
+  .course { border-top: 1px solid var(--line); }
+  .crow { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; padding: 11px 16px;
+    cursor: pointer; align-items: center; }
+  .cname { font-weight: 600; }
+  .cnext { font-size: 13px; color: var(--muted); grid-column: 1 / -1; }
+  .bar { height: 6px; background: var(--none-bg); border-radius: 99px; overflow: hidden; grid-column: 1 / -1; }
+  .bar > i { display: block; height: 100%; background: var(--ok); }
+  .cbadge { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+  .detail { display: none; padding: 0 16px 12px; }
+  .course.open .detail { display: block; }
+  .sect { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 10px 0 4px; }
+  .item { display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    padding: 7px 0; border-bottom: 1px dashed var(--line); }
+  .item:last-child { border-bottom: 0; }
+  .it-title { font-size: 15px; }
+  .it-meta { font-size: 12px; color: var(--muted); }
+  .late-txt { color: var(--bad); font-weight: 700; }
+
+  .review { border-color: var(--warn); }
+  .review h2 { font-size: 16px; margin: 0; padding: 12px 16px; background: var(--warn-bg); color: var(--warn); }
+  .rv { padding: 12px 16px; border-top: 1px solid var(--line); }
+  .rv .why { font-size: 14px; margin: 4px 0 8px; }
+  .rv label { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; padding: 3px 0; }
+  .rv select { width: 100%; font: inherit; padding: 7px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--card); color: var(--ink); margin: 6px 0; }
+  .rv .btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+  a { color: var(--accent); }
+
+  details.settings { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px; }
+  details.settings summary { cursor: pointer; font-weight: 600; }
+  .field { margin: 10px 0; font-size: 14px; }
+  .field input { width: 100%; font: inherit; padding: 8px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--card); color: var(--ink); margin-top: 4px; }
+  .err { color: var(--bad); font-size: 13px; }
+  .banner { background: var(--warn-bg); color: var(--warn); border-radius: 10px; padding: 8px 12px;
+    font-size: 13px; margin-bottom: 12px; }
+  .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--ink);
+    color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 14px; display: none; z-index: 9; }
+  .loading { text-align: center; color: var(--muted); padding: 40px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Homework</h1>
+      <div class="sub" id="today"></div>
+    </div>
+    <button class="small" id="refresh">Refresh</button>
+  </header>
+  <div id="demo"></div>
+  <div id="app"><div class="loading">Loading…</div></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+  var DEMO = /*DEMO_DATA*/null;
+  // Your script's web app address. Not secret: nothing loads without the private key.
+  var EXEC = 'https://script.google.com/macros/s/AKfycbycoC718RrRdM7zCuZMdkFWJSpPFMCPAzDXrpeutFrOhe-WEGW4pr5iHgOhdx9Uxyessg/exec';
+  // The private key arrives once in the link (#k=...), then is remembered on this phone.
+  var KEY = '';
+  function keyFrom(text) { var m = String(text || '').match(/k=([a-f0-9]{20,})/i) || String(text || '').match(/^\s*([a-f0-9]{40,})\s*$/i); return m ? m[1] : ''; }
+  function saveKey(k) { KEY = k; try { localStorage.setItem('hwKey', k); } catch (e) {} }
+  (function () {
+    var k = keyFrom(location.hash);
+    if (k) { saveKey(k); return; }
+    try { KEY = localStorage.getItem('hwKey') || ''; } catch (e) { KEY = ''; }
+  })();
+  var data = null;
+  var openCourses = {};
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function toast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg; t.style.display = 'block';
+    clearTimeout(toast._t); toast._t = setTimeout(function () { t.style.display = 'none'; }, 2600);
+  }
+
+  // Calls the Apps Script server; in preview mode it just shows a note.
+  var ACTIONS = {
+    apiGetDashboard:   function ()        { return { action: 'get' }; },
+    apiSetDaysAhead:   function (n)       { return { action: 'days', n: n }; },
+    apiSetQuizzesAhead:function (on)      { return { action: 'quiz', on: on ? '1' : '0' }; },
+    apiSetAlertEmails: function (t)       { return { action: 'alerts', emails: t }; },
+    apiSetStatus:      function (id, st)  { return { action: 'status', id: id, status: st }; },
+    apiResolveReview:  function (r, ids, mode) { return { action: 'review', reviewId: r, ids: JSON.stringify(ids), mode: mode }; },
+    apiRunNow:         function ()        { return { action: 'run' }; }
+  };
+  function call(fn, args, done) {
+    if (DEMO) { toast('Preview only - this works on the real page.'); return; }
+    if (!KEY) { showNoKey(); return; }
+    var q = ACTIONS[fn].apply(null, args || []);
+    q.api = '1'; q.k = KEY; q.t = Date.now();
+    var url = EXEC + '?' + Object.keys(q).map(function (k) {
+      return encodeURIComponent(k) + '=' + encodeURIComponent(q[k]);
+    }).join('&');
+    fetch(url, { credentials: 'omit', cache: 'no-store', redirect: 'follow' })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (!res.ok) throw new Error(res.error || 'Something went wrong');
+        data = res.data; render(); if (done) done();
+      })
+      .catch(function (e) {
+        var msg = e && e.message ? e.message : String(e);
+        if (/link/i.test(msg)) { showNoKey('That link no longer works.'); return; }
+        if (!data) {
+          document.getElementById('app').innerHTML = '<div class="banner">Could not load the tracker (' +
+            esc(msg.replace(/\.$/, '')) + '). Check your internet connection and tap Refresh.</div>';
+        } else { toast('Error: ' + msg); }
+        Array.prototype.forEach.call(document.querySelectorAll('button:disabled'), function (b) { b.disabled = false; });
+      });
+  }
+  // Shown when this phone has no key yet (for example an iPhone home-screen icon, which has its own storage).
+  function showNoKey(why) {
+    document.getElementById('app').innerHTML = '<div class="card" style="padding:16px">' +
+      '<p style="margin:0 0 8px"><b>' + esc(why || 'Almost there.') + '</b> Paste the full tracker link Jon sent you (the one ending in a long code), then tap Open.</p>' +
+      '<div class="field"><input id="keyIn" type="text" autocomplete="off" placeholder="Paste the tracker link here"></div>' +
+      '<button class="small primary" id="keyGo">Open</button></div>';
+    document.getElementById('keyGo').onclick = function () {
+      var k = keyFrom(document.getElementById('keyIn').value);
+      if (!k) { toast('That does not look like the tracker link.'); return; }
+      saveKey(k); load();
+    };
+  }
+  function load() {
+    if (DEMO) { data = DEMO; render(); return; }
+    call('apiGetDashboard', []);
+  }
+
+  function aheadText(n) {
+    if (n === null || n === undefined) return { num: '✓', unit: 'all loaded work done' };
+    if (n < 0) return { num: String(-n), unit: (n === -1 ? 'day' : 'days') + ' late' };
+    return { num: String(n), unit: (n === 1 ? 'day' : 'days') + ' ahead' };
+  }
+  function pillText(k) {
+    if (k.status === 'late') return k.lateCount + ' late';
+    if (k.status === 'behind') return 'Below target';
+    if (k.status === 'nodata') return k.pendingCas ? 'Loading sheets' : 'No sheets yet';
+    return 'On track';
+  }
+
+  function render() {
+    var d = data;
+    document.getElementById('today').textContent = d.todayPretty + ' · last inbox check ' + (d.lastRun || 'not yet');
+    document.getElementById('demo').innerHTML = DEMO
+      ? '<div class="banner">Preview with sample statuses. Algebra II assignments are from Juliet\'s real Quarter 1 CAS.</div>' : '';
+    var h = '';
+
+    h += '<div class="target"><div><div class="lbl">Kids should be ahead by</div>' +
+      '<div class="val">Everything due through ' + esc(d.horizonPretty) + '</div></div>' +
+      '<div class="stepper"><button id="minus" aria-label="fewer days">−</button>' +
+      '<div class="n">' + d.daysAhead + '</div><button id="plus" aria-label="more days">+</button></div>' +
+      '<label class="qa"><input type="checkbox" id="quizAhead"' + (d.quizzesAhead ? ' checked' : '') + '> ' +
+      'Count quizzes and tests toward this target <span class="it-meta">(off: they only count once late)</span></label></div>';
+
+    if (d.review.length) {
+      h += '<div class="card review"><h2>Needs your look (' + d.review.length + ')</h2>';
+      d.review.forEach(function (r) {
+        h += '<div class="rv" data-id="' + esc(r.reviewId) + '">' +
+          '<div><b>' + esc(r.childName) + '</b> · ' + esc(r.receivedAt) + '</div>' +
+          '<div class="it-meta">' + esc(r.subject) + (r.files ? ' · ' + esc(r.files) : '') + '</div>' +
+          '<div class="why">' + esc(r.reason) + '</div>';
+        r.suggestedIds.forEach(function (id) {
+          var o = r.options.filter(function (x) { return x.id === id; })[0];
+          if (o) h += '<label><input type="checkbox" class="pick" value="' + esc(o.id) + '" checked> ' + esc(o.label) + '</label>';
+        });
+        if (r.options.length) {
+          h += '<select class="extra"><option value="">Add an assignment…</option>' +
+            r.options.map(function (o) {
+              return '<option value="' + esc(o.id) + '">' + esc(o.label) + (o.done ? ' ✓' : '') + '</option>';
+            }).join('') + '</select>';
+        }
+        h += '<div class="btns"><button class="small primary act-accept">Mark these done</button>' +
+          '<button class="small act-dismiss">Not homework / ignore</button>' +
+          (r.threadUrl ? '<a class="small" href="' + esc(r.threadUrl) + '" target="_blank" rel="noopener">Open email</a>' : '') +
+          '</div></div>';
+      });
+      h += '</div>';
+    }
+
+    d.kids.forEach(function (k) {
+      var a = aheadText(k.aheadDays);
+      h += '<div class="card"><div class="kidhead"><div>' +
+        '<div class="kidname">' + esc(k.name) + '</div><div class="grade">' + esc(k.grade) + '</div>' +
+        '<span class="pill bg-' + k.status + '">' + esc(pillText(k)) + '</span></div>';
+      if (k.hasData) {
+        h += '<div class="big s-' + k.status + '"><div class="num">' + a.num + '</div><div class="unit">' + a.unit + '</div></div>';
+      }
+      h += '</div>';
+      if (!k.hasData) {
+        h += '<div class="note">' + (k.pendingCas
+          ? k.pendingCas + ' assignment sheet(s) are being read. They usually appear within the hour.'
+          : 'Waiting for ' + esc(k.name) + '\'s assignment sheets (CAS). Have ' + esc(k.name) + ' email them to the homework address.') + '</div>';
+      } else if (k.coverageShort) {
+        h += '<div class="note">Assignments are only loaded through ' + esc(k.coverageEnd) + '. Send the next quarter\'s CAS to see further ahead.</div>';
+      }
+      k.courses.forEach(function (c) {
+        var key = k.key + '|' + c.name;
+        var pct = c.total ? Math.round(100 * c.done / c.total) : 0;
+        var next = c.late.length ? '<span class="late-txt">Late: ' + esc(c.late[0].title) + ' (due ' + esc(c.late[0].duePretty) + ')</span>'
+          : c.upcoming.length ? 'Next: ' + esc(c.upcoming[0].title) + ' · due ' + esc(c.upcoming[0].duePretty)
+          : 'All loaded assignments done';
+        var badge = c.status === 'late' ? c.late.length + ' late' : c.status === 'behind' ? c.needed.length + ' due soon' : 'ahead';
+        h += '<div class="course' + (openCourses[key] ? ' open' : '') + '" data-key="' + esc(key) + '">' +
+          '<div class="crow"><div class="cname">' + esc(c.name) + ' <span class="it-meta">' + c.done + '/' + c.total + '</span></div>' +
+          '<span class="cbadge bg-' + c.status + '">' + badge + '</span>' +
+          '<div class="bar"><i style="width:' + pct + '%"></i></div>' +
+          '<div class="cnext">' + next + '</div></div><div class="detail">';
+        if (c.late.length) h += '<div class="sect">Late</div>' + c.late.map(itemRow).join('');
+        var later = c.upcoming.filter(function (x) { return c.late.indexOf(x) < 0; });
+        if (later.length) h += '<div class="sect">Coming up</div>' + later.map(itemRow).join('');
+        if (c.recentDone.length) h += '<div class="sect">Recently done</div>' + c.recentDone.map(itemRow).join('');
+        h += '</div></div>';
+      });
+      h += '</div>';
+    });
+
+    if (d.failedCas && d.failedCas.length) {
+      h += '<div class="banner">Could not read: ' + d.failedCas.map(function (f) {
+        return esc(f.child + ' - ' + f.fileName.replace(/[+_]/g, ' ') + ' (' + f.note + ')'); }).join('; ') + '</div>';
+    }
+
+    h += '<details class="settings"><summary>Settings</summary>' +
+      '<div class="field">Send alerts and the Sunday summary to (comma separated):' +
+      '<input id="alerts" type="email" multiple placeholder="you@example.com, becky@example.com" value="' + esc(d.alertEmails) + '"></div>' +
+      '<button class="small" id="saveAlerts">Save</button> <button class="small" id="runNow">Check inbox now</button>' +
+      (d.lastError ? '<p class="err">Last error: ' + esc(d.lastError) + '</p>' : '') +
+      '</details>';
+
+    document.getElementById('app').innerHTML = h;
+    wire();
+  }
+
+  function itemRow(a) {
+    var done = a.status === 'done' || a.status === 'excused';
+    var meta = 'due ' + a.duePretty + (done && a.source ? ' · ' + a.source : '');
+    return '<div class="item"><div><div class="it-title">' + esc(a.title) + '</div>' +
+      '<div class="it-meta">' + esc(meta) + (a.details ? ' · ' + esc(a.details) : '') + '</div></div>' +
+      (done ? '<button class="small act-undo" data-id="' + esc(a.id) + '">Undo</button>'
+            : '<button class="small act-done" data-id="' + esc(a.id) + '">Mark done</button>') + '</div>';
+  }
+
+  function wire() {
+    document.getElementById('minus').onclick = function () { call('apiSetDaysAhead', [data.daysAhead - 1]); };
+    document.getElementById('plus').onclick = function () { call('apiSetDaysAhead', [data.daysAhead + 1]); };
+    document.getElementById('quizAhead').onchange = function () { call('apiSetQuizzesAhead', [this.checked]); };
+    document.getElementById('saveAlerts').onclick = function () {
+      call('apiSetAlertEmails', [document.getElementById('alerts').value], function () { toast('Saved'); });
+    };
+    document.getElementById('runNow').onclick = function () {
+      this.disabled = true; toast('Checking the inbox…');
+      call('apiRunNow', [], function () { toast('Done'); });
+    };
+    Array.prototype.forEach.call(document.querySelectorAll('.crow'), function (el) {
+      el.onclick = function () {
+        var c = el.parentNode; var key = c.getAttribute('data-key');
+        openCourses[key] = !openCourses[key]; c.classList.toggle('open');
+      };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.act-done'), function (b) {
+      b.onclick = function () { b.disabled = true; call('apiSetStatus', [b.getAttribute('data-id'), 'done']); };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.act-undo'), function (b) {
+      b.onclick = function () { b.disabled = true; call('apiSetStatus', [b.getAttribute('data-id'), 'open']); };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.rv'), function (rv) {
+      var id = rv.getAttribute('data-id');
+      var acc = rv.querySelector('.act-accept');
+      var dis = rv.querySelector('.act-dismiss');
+      acc.onclick = function () {
+        var ids = Array.prototype.map.call(rv.querySelectorAll('.pick:checked'), function (x) { return x.value; });
+        var extra = rv.querySelector('.extra');
+        if (extra && extra.value) ids.push(extra.value);
+        if (!ids.length) { toast('Pick at least one assignment'); return; }
+        acc.disabled = true; call('apiResolveReview', [id, ids, 'accept']);
+      };
+      dis.onclick = function () { dis.disabled = true; call('apiResolveReview', [id, [], 'dismiss']); };
+    });
+  }
+
+  document.getElementById('refresh').onclick = load;
+  load();
+</script>
+</body>
+</html>
