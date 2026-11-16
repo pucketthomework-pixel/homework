@@ -212,12 +212,13 @@
       ? '<div class="banner">Preview with sample statuses. Algebra II assignments are from Juliet\'s real Quarter 1 CAS.</div>' : '';
     var h = '';
 
-    h += '<div class="target"><div><div class="lbl">Kids should be ahead by</div>' +
+    h += '<div class="target"><div><div class="lbl">Omnibus courses should be ahead by</div>' +
       '<div class="val">Everything due through ' + esc(d.horizonPretty) + '</div></div>' +
       '<div class="stepper"><button id="minus" aria-label="fewer days">−</button>' +
       '<div class="n">' + d.daysAhead + '</div><button id="plus" aria-label="more days">+</button></div>' +
       '<label class="qa"><input type="checkbox" id="quizAhead"' + (d.quizzesAhead ? ' checked' : '') + '> ' +
-      'Count quizzes and tests toward this target <span class="it-meta">(off: they only count once late)</span></label></div>';
+      'Count Omnibus quizzes and tests toward this target <span class="it-meta">(off: they only count once late)</span></label>' +
+      '<div class="it-meta" style="flex-basis:100%">All other courses only need to be turned in on time.</div></div>';
 
     if (d.review.length) {
       h += '<div class="card review"><h2>Needs your look (' + d.review.length + ')</h2>';
@@ -266,9 +267,9 @@
         var next = c.late.length ? '<span class="late-txt">Late: ' + esc(c.late[0].title) + ' (due ' + esc(c.late[0].duePretty) + ')</span>'
           : c.upcoming.length ? 'Next: ' + esc(c.upcoming[0].title) + ' · due ' + esc(c.upcoming[0].duePretty)
           : 'All loaded assignments done';
-        var badge = c.status === 'late' ? c.late.length + ' late' : c.status === 'behind' ? c.needed.length + ' due soon' : 'ahead';
+        var badge = c.status === 'late' ? c.late.length + ' late' : c.status === 'behind' ? c.needed.length + ' due soon' : (c.aheadRule ? 'ahead' : 'on time');
         h += '<div class="course' + (openCourses[key] ? ' open' : '') + '" data-key="' + esc(key) + '">' +
-          '<div class="crow"><div class="cname">' + esc(c.name) + ' <span class="it-meta">' + c.done + '/' + c.total + '</span></div>' +
+          '<div class="crow"><div class="cname">' + esc(c.name) + ' <span class="it-meta">' + c.done + '/' + c.total + (c.aheadRule ? ' · ' + data.daysAhead + '-day rule' : '') + '</span></div>' +
           '<span class="cbadge bg-' + c.status + '">' + badge + '</span>' +
           '<div class="bar"><i style="width:' + pct + '%"></i></div>' +
           '<div class="cnext">' + next + '</div></div><div class="detail">';
